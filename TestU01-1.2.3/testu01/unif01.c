@@ -67,9 +67,11 @@ void unif01_WriteNameGen (unif01_Gen *gen)
 
 void unif01_WriteState (unif01_Gen *gen)
 {
-   printf ("\nGenerator state:\n");
-   gen->Write (gen->state);
-   printf ("\n");
+   if (gen->state) {
+      printf ("\nGenerator state:\n");
+      gen->Write (gen->state);
+      printf ("\n");
+   }
 }
 
 void unif01_WrLongStateDef (void)

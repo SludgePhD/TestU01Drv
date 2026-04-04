@@ -79,7 +79,6 @@ void swrite_Head (unif01_Gen *gen, char *TestName, long N, long n, int r)
    }
    util_Assert (gen != NULL, "No generator has been created");
    unif01_WriteNameGen (gen);
-   printf ("\n");
    if (swrite_ExperimentName && strcmp (swrite_ExperimentName, "")) {
       printf ("%s", swrite_ExperimentName);
       printf (":\n\n");
@@ -102,7 +101,7 @@ void swrite_Final (unif01_Gen *gen, chrono_Chrono *Timer)
    chrono_Write (Timer, chrono_hms);
    printf ("\n");
    unif01_WriteState (gen);
-   printf ("\n\n\n");
+   printf ("\n\n");
 }
 
 

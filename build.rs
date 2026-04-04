@@ -13,12 +13,12 @@ fn find_sources(basedir: &str) -> io::Result<Vec<PathBuf>> {
 }
 
 fn main() -> io::Result<()> {
-    let mylib_src = find_sources("TestU01-2009/mylib")?;
-    let probdist_src = find_sources("TestU01-2009/probdist")?;
-    let testu01_src = find_sources("TestU01-2009/testu01")?;
+    let mylib_src = find_sources("TestU01-1.2.3/mylib")?;
+    let probdist_src = find_sources("TestU01-1.2.3/probdist")?;
+    let testu01_src = find_sources("TestU01-1.2.3/testu01")?;
 
     cc::Build::new()
-        .include("TestU01-2009")
+        .include("TestU01-1.2.3/include")
         .files(mylib_src)
         .files(probdist_src)
         .files(testu01_src)

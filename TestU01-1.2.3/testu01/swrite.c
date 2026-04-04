@@ -72,12 +72,11 @@ void swrite_SetExperimentName (char Name[])
 void swrite_Head (unif01_Gen *gen, char *TestName, long N, long n, int r)
 {
    printf ("***********************************************************\n");
-   printf ("HOST = ");
    if (swrite_Host) {
+      printf ("HOST = ");
       gdef_WriteHostName ();
       printf ("\n");
-   } else
-      printf ("\n\n");
+   }
    util_Assert (gen != NULL, "No generator has been created");
    unif01_WriteNameGen (gen);
    printf ("\n");

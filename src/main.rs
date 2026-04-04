@@ -28,6 +28,7 @@ type scomp_Res = c_void;
 #[link(name = "testu01")]
 unsafe extern "C" {
     static mut swrite_Basic: lebool;
+    static mut swrite_Host: lebool;
 
     fn unif01_CreateExternGenBits(
         name: *mut c_char,
@@ -66,8 +67,7 @@ struct Cli {
     #[larpa(flag, name = ["-q", "--quiet"], inverse_of = "verbose")]
     _quiet: (),
 
-    /// Comma-separated list of test batteries to run; valid names are 'SmallCrush', 'Crush',
-    /// 'BigCrush' and 'LinComp'.
+    /// Comma-separated list of test batteries to run; valid names are 'SmallCrush', 'Crush', 'BigCrush' and 'LinComp'.
     #[larpa(name = ["-T", "--tests"], default)]
     tests: TestList,
 }
@@ -145,6 +145,11 @@ fn main() {
     if cli.verbose.get() < 0 {
         unsafe {
             swrite_Basic = 0;
+        }
+    }
+    if cli.verbose.get() == 0 {
+        unsafe {
+            swrite_Host = 0;
         }
     }
 

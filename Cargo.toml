@@ -2,10 +2,10 @@
 name = "TestU01Drv"
 version = "0.1.0"
 edition = "2024"
-
-#[[bin]]
-#name = "TestU01Drv"
-#path = "src/main.rs"
+description = "CLI driver for the TestU01 random number testing library"
+categories = ["mathematics", "algorithms"]
+keywords = ["prng", "rng", "statistics", "correlation"]
+license-file = "TestU01-1.2.3/COPYING"
 
 [build-dependencies]
 cc = "1.2.59"

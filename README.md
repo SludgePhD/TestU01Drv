@@ -7,7 +7,29 @@ This makes [TestU01], which normally requires linking against it as a library, e
 
 [TestU01]: https://en.wikipedia.org/wiki/TestU01
 
+## Usage
+
+Test `/dev/urandom` with the `SmallCrush` and `LinComp` test batteries:
+
+```shell
+$ cat /dev/urandom | TestU01Drv --tests SmallCrush,LinComp
+```
+
 ## Installation
+
+### From GitHub releases
+
+Every [GitHub release] contains pre-built statically linked binaries for Linux.
+
+[GitHub release]: https://github.com/SludgePhD/TestU01Drv/releases
+
+### From `crates.io`
+
+Make sure a recent Rust toolchain is installed, then run:
+
+```shell
+$ cargo install TestU01Drv
+```
 
 ### From Source
 

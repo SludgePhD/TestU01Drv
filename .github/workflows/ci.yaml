@@ -1,0 +1,112 @@
+name: CI/CD
+on:
+  pull_request:
+  push:
+    branches:
+    - main
+
+env:
+  RUSTUP_MAX_RETRIES: 10
+  MSRV: 1.94.0  # (keep this in sync with `Cargo.toml`'s `rust-version`)
+
+jobs:
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Install Rust toolchain
+      run: |
+        rustup install ${{ env.MSRV }} --profile=minimal
+        rustup default ${{ env.MSRV }}
+
+    - name: Install CI/CD tooling
+      run: cargo install sludge-cicd --debug
+
+    - name: Run CI/CD
+      run: sludge-cicd
+      env:
+        CICD_SKIP_DOCS: 1
+
+  ci:
+    name: CI
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - os: ubuntu-latest
+            target: i686-unknown-linux-musl
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Install native toolchain
+      run: sudo apt install musl-dev musl-tools
+
+    - name: Install Rust toolchain
+      run: rustup install stable --profile=minimal
+
+    - name: Install Rust target
+      run: rustup target add ${{ matrix.target }}
+
+    - name: Install CI/CD tooling
+      run: cargo install sludge-cicd --debug
+
+    - name: Run CI/CD
+      run: sludge-cicd --target ${{ matrix.target }}
+      env:
+        CICD_SKIP_DOCS: 1
+        SIZEBENCH: 1
+
+    - name: Prepare artifact
+      run: |
+        cargo build --release --target ${{ matrix.target }}
+        mv target/${{ matrix.target }}/release/TestU01Drv TestU01Drv-${{ matrix.target }}
+
+    - uses: actions/upload-artifact@v5
+      if: ${{ endsWith(matrix.target, '-musl') }}
+      with:
+        name: ${{ matrix.target }}
+        path: TestU01Drv-${{ matrix.target }}
+        if-no-files-found: error
+
+  cd:
+    name: Autopublish
+    needs: [ci, msrv]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # pushes tags to the repo
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Install Rust toolchain
+      run: rustup install stable --profile=minimal
+
+    - name: Install CI/CD tooling
+      run: cargo install sludge-cicd --debug
+
+    - uses: actions/download-artifact@v6
+      with:
+        path: target/dist/
+        merge-multiple: true
+
+    - name: Run CI/CD
+      run: sludge-cicd
+      env:
+        CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CICD_SKIP_DOCS: 1  # tested separately
+        ATTACHMENTS_TestU01Drv: target/dist

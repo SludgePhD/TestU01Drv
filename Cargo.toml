@@ -2,6 +2,7 @@
 name = "TestU01Drv"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.94.0"  # (keep in sync with `ci.yaml`)
 description = "CLI driver for the TestU01 random number testing library"
 categories = ["mathematics", "algorithms"]
 keywords = ["prng", "rng", "statistics", "correlation"]

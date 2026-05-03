@@ -4,6 +4,7 @@
 
 mod defer;
 
+use core::num::NonZero;
 use std::{
     ffi::{c_char, c_int, c_long, c_uint, c_void},
     io::{BufReader, Read, StdinLock, stdin},
@@ -15,6 +16,8 @@ use std::{
 use larpa::{Command, types::Verbosity};
 
 use crate::defer::defer;
+
+type Error = Box<dyn std::error::Error>;
 
 /// Fucking "le bool" is what they called it. Are you serious. How french can you be.
 #[allow(non_camel_case_types)]
@@ -67,49 +70,52 @@ struct Cli {
     #[larpa(flag, name = ["-q", "--quiet"], inverse_of = "verbose")]
     _quiet: (),
 
-    /// Comma-separated list of test batteries to run; valid names are 'SmallCrush', 'Crush', 'BigCrush' and 'LinComp'.
-    #[larpa(name = ["-T", "--tests"], default)]
+    /// Comma-separated list of test batteries to run; valid names are 'SmallCrush', 'Crush', 'BigCrush', 'LinComp' and 'LinComp-<N>' (where <N> is the test size).
+    #[larpa(name = ["-T", "--tests"], default = "smallcrush")]
     tests: TestList,
 }
 
-struct TestList(Vec<TestBattery>);
+struct TestList(Vec<Test>);
 
 impl Default for TestList {
     fn default() -> Self {
-        Self(vec![TestBattery::SmallCrush])
+        Self(vec![Test::SmallCrush])
     }
 }
 
 impl FromStr for TestList {
-    type Err = String;
+    type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self(
             s.split(',')
-                .map(TestBattery::from_str)
+                .map(Test::from_str)
                 .collect::<Result<Vec<_>, _>>()?,
         ))
     }
 }
 
 #[derive(Debug)]
-enum TestBattery {
+enum Test {
     SmallCrush,
     Crush,
     BigCrush,
-    LinComp,
+    LinComp(NonZero<u32>),
 }
 
-impl FromStr for TestBattery {
-    type Err = String;
+impl FromStr for Test {
+    type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match &*s.to_ascii_lowercase() {
             "smallcrush" => Ok(Self::SmallCrush),
             "crush" => Ok(Self::Crush),
             "bigcrush" => Ok(Self::BigCrush),
-            "lincomp" => Ok(Self::LinComp),
-            _ => Err(format!("unknown test battery '{s}'")),
+            "lincomp" => Ok(Self::LinComp(NonZero::new(100_000).unwrap())),
+            lc if let Some(lc_size) = lc.strip_prefix("lincomp-") => {
+                Ok(Self::LinComp(lc_size.parse()?))
+            }
+            _ => Err(format!("unknown test '{s}'").into()),
         }
     }
 }
@@ -163,24 +169,19 @@ fn main() {
 
     let mut batteries = cli.tests.0;
     if batteries.is_empty() {
-        batteries.push(TestBattery::SmallCrush);
+        batteries.push(Test::SmallCrush);
     }
 
     eprintln!("Running the following test batteries: {batteries:?}");
 
     for bat in batteries {
         match bat {
-            TestBattery::SmallCrush => unsafe { bbattery_SmallCrush(g) },
-            TestBattery::Crush => unsafe { bbattery_Crush(g) },
-            TestBattery::BigCrush => unsafe { bbattery_BigCrush(g) },
-            TestBattery::LinComp => unsafe {
-                // FIXME: make these configurable
-                const SIZES: &[c_long] = &[250, 500, 1000, 5000, 25000, 50000, 75000];
-
+            Test::SmallCrush => unsafe { bbattery_SmallCrush(g) },
+            Test::Crush => unsafe { bbattery_Crush(g) },
+            Test::BigCrush => unsafe { bbattery_BigCrush(g) },
+            Test::LinComp(size) => unsafe {
                 let res = scomp_CreateRes();
-                for &size in SIZES {
-                    scomp_LinearComp(g, res, 1, size, 0, 1);
-                }
+                scomp_LinearComp(g, res, 1, size.get() as c_long, 0, 1);
                 scomp_DeleteRes(res);
             },
         }

@@ -1,6 +1,6 @@
 [package]
 name = "TestU01Drv"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.95.0"  # (keep in sync with `ci.yaml`)
 description = "CLI driver for the TestU01 random number testing library"

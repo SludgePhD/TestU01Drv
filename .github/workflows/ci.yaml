@@ -7,7 +7,7 @@ on:
 
 env:
   RUSTUP_MAX_RETRIES: 10
-  MSRV: 1.94.0  # (keep this in sync with `Cargo.toml`'s `rust-version`)
+  MSRV: 1.95.0  # (keep this in sync with `Cargo.toml`'s `rust-version`)
 
 jobs:
   msrv:
